@@ -34,7 +34,7 @@ async function bootstrap() {
 
   if (process.env.APP_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('ASB-Diffusion')
+      .setTitle('NestJS_API')
       .setDescription('Diffusion APIs')
       .setVersion('1.0')
       .addBearerAuth()
@@ -45,7 +45,7 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document, {
       jsonDocumentUrl: 'api/json-spec',
       yamlDocumentUrl: 'api/yaml-spec',
-      customSiteTitle: 'ASB Diffusion API DOCS',
+      customSiteTitle: 'API DOCS',
     });
   }
 
