@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -9,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { LoginType } from 'src/constant/constant-datavalue';
 import { MessageContent } from 'src/constant/constant-message';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -143,6 +145,37 @@ export class UsersService {
       return apiResponse(res, 500, {}, 'Internal Server Error');
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  updateUserProfile(updateUserDto: UpdateUserDto, res: any, req: any) {
+    try {
+      const user = req?.user;
+
+      if (!user) return apiResponse(res, 404, {}, `User Profile not found`);
+
+      updateUserDto.updatedBy = user?.id;
+
+      this.updateUserByCondition(user?.id, { ...updateUserDto });
+
+      return apiResponse(
+        res,
+        200,
+        {},
+        MessageContent.CREATE_UPDATE_DELETE_FETCHED_SUCCESS(
+          `User Details`,
+          `Updated`,
+        ),
+      );
+    } catch (err) {
+      this.logger.error(`Update User Profile Error: ${JSON.stringify(err)}`);
+
+      return apiResponse(
+        res,
+        500,
+        {},
+        err?.message || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

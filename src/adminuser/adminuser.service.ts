@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
@@ -12,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { Setting } from './../settings/entities/setting.entity';
 import { MessageContent } from 'src/constant/constant-message';
 import { ConfigService } from '@nestjs/config';
+import { ApiResponseCommonMetadata } from '@nestjs/swagger';
 
 @Injectable()
 export class AdminuserService {
@@ -31,12 +33,16 @@ export class AdminuserService {
    * @param res
    * @returns userdetails
    */
-  async create(createAdminuserDto: CreateAdminuserDto, res: any): Promise<any> {
+  async create(
+    createAdminuserDto: CreateAdminuserDto,
+    res: any,
+    req: any,
+  ): Promise<any> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const userId = 1;
+    const userId = req?.user ? req?.user?.id : 1;
     try {
       // Check if the email already exists
       const existingEmail = await this.userRepository.findOneBy({
@@ -147,5 +153,38 @@ export class AdminuserService {
 
   async updateUser(id: number, updateData: Partial<User>): Promise<void> {
     await this.userRepository.update({ id: id }, updateData);
+  }
+
+  async deleteUserDetails(userId, res, req) {
+    try {
+      //check the user if exist proceed else throw error messages
+      const userData = await this.findOneById(userId);
+
+      if (!userData) return apiResponse(res, 404, {}, `UserId not found`);
+
+      await this.userRepository.update(
+        { id: userId },
+        { deletedAt: new Date(), activeStatus: false, updatedBy: req?.user },
+      );
+
+      return apiResponse(
+        res,
+        200,
+        {},
+        MessageContent.CREATE_UPDATE_DELETE_FETCHED_SUCCESS(
+          `User data`,
+          `Deleted`,
+        ),
+      ) as ApiResponseCommonMetadata;
+    } catch (err) {
+      this.logger.error(`deleteUserDetails Error: ${JSON.stringify(err)}`);
+
+      return apiResponse(
+        res,
+        500,
+        {},
+        err?.message || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
