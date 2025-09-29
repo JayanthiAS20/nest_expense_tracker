@@ -1,7 +1,8 @@
-readme
 ## Description
 
-ASB Diffusion api's
+It's a simple NestJS application - authentication and authorization api included
+
+
 ## Installation
 
 ```bash
