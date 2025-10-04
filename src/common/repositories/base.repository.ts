@@ -6,6 +6,7 @@ import {
   DataSource,
   EntityTarget,
   SelectQueryBuilder,
+  FindOneOptions,
 } from 'typeorm';
 import { PageDto, PageMetaDto, PageOptionsDto } from '../dto/page.dto';
 
@@ -68,5 +69,16 @@ export class BaseRepository<T extends ObjectLiteral> extends Repository<T> {
     const meta = new PageMetaDto({ pageOptionsDto, itemCount: total });
 
     return new PageDto<T>(items, meta);
+  }
+
+  findOneWithRelation(
+    condition: FindOptionsWhere<T>,
+    relations?: string[],
+  ): Promise<T> | null {
+    const options: FindOneOptions<T> = {
+      where: condition,
+      relations,
+    };
+    return this.findOne(options);
   }
 }

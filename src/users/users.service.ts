@@ -190,10 +190,10 @@ export class UsersService {
 
   async findUserByCondition(condition: any) {
     try {
-      const data = await this.userRepository.findOne({
-        where: condition,
-        relations: { settings: true },
-      });
+      const data = await this.userRepository.findOneWithRelation(
+        { ...condition },
+        ['settings'],
+      );
 
       if (!data) return false;
 
