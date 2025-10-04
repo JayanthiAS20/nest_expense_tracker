@@ -2,25 +2,32 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { apiResponse } from './../utils/response.utils';
 import * as bcrypt from 'bcrypt';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { LoginType } from 'src/constant/constant-datavalue';
 import { MessageContent } from 'src/constant/constant-message';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './repository/user.repository';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userRepository: UserRepository,
     private dataSource: DataSource,
   ) {}
+
+  async getUserByEmail(email: string) {
+    return this.userRepository.findByEmail(email);
+  }
+
+  async deactivateUser(id: number) {
+    await this.userRepository.softDeleteById(id);
+  }
 
   async create(createUserDto: CreateUserDto, res: any): Promise<any> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -57,20 +64,14 @@ export class UsersService {
       // check if emailUser already exist or not if yes throw error messages
       if (emailUser) {
         if (!emailUser.isMobileVerified) {
-          await this.userRepository.update(
-            { id: emailUser.id },
-            { mobile: createUserDto.mobile },
-          );
+          await this.userRepository.updateEntity(emailUser.id, {
+            mobile: createUserDto.mobile,
+          });
 
           if (!emailUser.email && createUserDto.email && mobileUser) {
-            await this.userRepository.update(
-              {
-                id: mobileUser?.id,
-              },
-              {
-                email: createUserDto.email,
-              },
-            );
+            await this.userRepository.updateEntity(mobileUser?.id, {
+              email: createUserDto.email,
+            });
           }
 
           const signUpMethods: { type: LoginType; value: string }[] = [];
@@ -181,7 +182,7 @@ export class UsersService {
 
   async updateUserByCondition(condition, update) {
     try {
-      return await this.userRepository.update(condition, update);
+      return await this.userRepository.updateEntity(condition, update);
     } catch (err) {
       throw new Error(err);
     }

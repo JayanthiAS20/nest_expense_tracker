@@ -1,0 +1,72 @@
+import {
+  Repository,
+  DeepPartial,
+  FindOptionsWhere,
+  ObjectLiteral,
+  DataSource,
+  EntityTarget,
+  SelectQueryBuilder,
+} from 'typeorm';
+import { PageDto, PageMetaDto, PageOptionsDto } from '../dto/page.dto';
+
+export class BaseRepository<T extends ObjectLiteral> extends Repository<T> {
+  constructor(entity: EntityTarget<T>, dataSource: DataSource) {
+    super(entity, dataSource.createEntityManager());
+  }
+
+  async findAll(options?: FindOptionsWhere<T>): Promise<T[]> {
+    return await this.find({
+      where: {
+        ...options,
+        activeStatus: true,
+      },
+    });
+  }
+
+  async findById(condition: FindOptionsWhere<T>): Promise<T | null> {
+    return await this.findOne({
+      where: condition,
+    });
+  }
+
+  async createEntity(data: DeepPartial<T>): Promise<T> {
+    const entity = this.create(data);
+    return await this.save(entity);
+  }
+
+  async updateEntity(id: number, data: Partial<T>): Promise<T> {
+    await this.update(id, data);
+    return this.findById({
+      id,
+      activeStatus: true,
+    } as unknown as FindOptionsWhere<T>);
+  }
+
+  async softDeleteById(id: number): Promise<void> {
+    await this.update(id, { activeStatus: false } as any);
+  }
+
+  async paginate(
+    pageOptionsDto: PageOptionsDto,
+    where?: FindOptionsWhere<T> | FindOptionsWhere<T>[],
+    queryBuilderFn?: (qb: SelectQueryBuilder<T>) => SelectQueryBuilder<T>,
+  ): Promise<PageDto<T>> {
+    const qb = this.createQueryBuilder('entity')
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take)
+      .orderBy(`entity.createdAt`, pageOptionsDto.order);
+
+    if (where) {
+      qb.where(where);
+    }
+
+    if (queryBuilderFn) {
+      queryBuilderFn(qb);
+    }
+
+    const [items, total] = await qb.getManyAndCount();
+    const meta = new PageMetaDto({ pageOptionsDto, itemCount: total });
+
+    return new PageDto<T>(items, meta);
+  }
+}
