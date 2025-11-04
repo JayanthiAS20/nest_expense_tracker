@@ -25,9 +25,9 @@ export class UsersService {
     return this.userRepository.findByEmail(email);
   }
 
-  async deactivateUser(id: number) {
-    await this.userRepository.softDeleteById(id);
-  }
+  // async deactivateUser(id: number) {
+  //   await this.userRepository.softDeleteById(id);
+  // }
 
   async create(createUserDto: CreateUserDto, res: any): Promise<any> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -139,6 +139,7 @@ export class UsersService {
         201,
         userDetails,
         MessageContent.CREATE_UPDATE_DELETE_FETCHED_SUCCESS('User', 'Created'),
+        true,
       );
     } catch (error) {
       this.logger.error(`Error creating user: ${error?.message}`);
@@ -167,6 +168,7 @@ export class UsersService {
           `User Details`,
           `Updated`,
         ),
+        true,
       );
     } catch (err) {
       this.logger.error(`Update User Profile Error: ${JSON.stringify(err)}`);

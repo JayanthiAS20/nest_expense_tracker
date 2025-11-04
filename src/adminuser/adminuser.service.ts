@@ -175,6 +175,7 @@ export class AdminuserService {
           `User data`,
           `Deleted`,
         ),
+        true,
       ) as ApiResponseCommonMetadata;
     } catch (err) {
       this.logger.error(`deleteUserDetails Error: ${JSON.stringify(err)}`);

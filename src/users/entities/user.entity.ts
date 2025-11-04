@@ -1,7 +1,15 @@
-import { Entity, Column, OneToOne, JoinColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToOne,
+  JoinColumn,
+  Index,
+  OneToMany,
+} from 'typeorm';
 import { BaseAudit } from '../../common/entities/base-audit.entity';
 import { Gender, RoleType, Status } from '../../constant/constant-datavalue';
 import { Setting } from '../../settings/entities/setting.entity';
+import { Expense } from '../../expense/entities/expense.entity';
 
 @Index('full_text_search', ['name', 'email'], { fulltext: true })
 @Entity({ name: 'user' })
@@ -50,4 +58,7 @@ export class User extends BaseAudit {
 
   @Column({ nullable: true, type: 'enum', enum: Gender })
   gender?: Gender;
+
+  @OneToMany(() => Expense, (expense) => expense.user)
+  expense: Expense[];
 }

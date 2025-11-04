@@ -10,6 +10,7 @@ import { AdminuserModule } from './adminuser/adminuser.module';
 import { UsersModule } from './users/users.module';
 import { SettingsModule } from './settings/settings.module';
 import { CommonModule } from './common/common.module';
+import { ExpenseModule } from './expense/expense.module';
 
 @Module({
   imports: [
@@ -25,10 +26,9 @@ import { CommonModule } from './common/common.module';
     JwtModule.registerAsync({
       global: true,
       useFactory: (configService: ConfigService) => ({
-        secret: Buffer.from(
-          configService.get('JWT_SECRET') as string,
-          'base64',
-        ).toString('utf-8'),
+        secret: Buffer.from(configService.get('JWT_SECRET'), 'base64').toString(
+          'utf-8',
+        ),
         signOptions: {
           expiresIn: configService.get<string>('JWT_TTL', '3600s'),
         },
@@ -40,6 +40,7 @@ import { CommonModule } from './common/common.module';
     UsersModule,
     SettingsModule,
     CommonModule,
+    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

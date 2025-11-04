@@ -7,6 +7,7 @@ import {
   EntityTarget,
   SelectQueryBuilder,
   FindOneOptions,
+  FindOptionsOrder,
 } from 'typeorm';
 import { PageDto, PageMetaDto, PageOptionsDto } from '../dto/page.dto';
 
@@ -15,18 +16,30 @@ export class BaseRepository<T extends ObjectLiteral> extends Repository<T> {
     super(entity, dataSource.createEntityManager());
   }
 
-  async findAll(options?: FindOptionsWhere<T>): Promise<T[]> {
+  async findAll(
+    options?: FindOptionsWhere<T>,
+    orderBy?: keyof T,
+    order: 'ASC' | 'DESC' = 'DESC',
+  ): Promise<T[]> {
+    const orderOption: FindOptionsOrder<T> = orderBy
+      ? ({ [orderBy]: order } as FindOptionsOrder<T>)
+      : {};
+
     return await this.find({
       where: {
         ...options,
         activeStatus: true,
       },
+      order: orderOption,
     });
   }
 
   async findById(condition: FindOptionsWhere<T>): Promise<T | null> {
     return await this.findOne({
-      where: condition,
+      where: {
+        ...condition,
+        activeStatus: true,
+      },
     });
   }
 
@@ -43,8 +56,8 @@ export class BaseRepository<T extends ObjectLiteral> extends Repository<T> {
     } as unknown as FindOptionsWhere<T>);
   }
 
-  async softDeleteById(id: number): Promise<void> {
-    await this.update(id, { activeStatus: false } as any);
+  async softDeleteById(id: number, data: any): Promise<void> {
+    await this.update(id, { activeStatus: false, ...data });
   }
 
   async paginate(
