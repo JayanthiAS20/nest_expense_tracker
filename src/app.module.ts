@@ -26,9 +26,10 @@ import { ExpenseModule } from './expense/expense.module';
     JwtModule.registerAsync({
       global: true,
       useFactory: (configService: ConfigService) => ({
-        secret: Buffer.from(configService.get('JWT_SECRET'), 'base64').toString(
-          'utf-8',
-        ),
+        secret: Buffer.from(
+          configService.get<string>('JWT_SECRET'),
+          'base64',
+        ).toString('utf-8'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_TTL', '3600s'),
         },
